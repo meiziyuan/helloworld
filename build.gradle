@@ -3,9 +3,10 @@
 buildscript {
     repositories {
         jcenter()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.2.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -15,9 +16,68 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+        google()
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+
+
+///下面为配置jenkins增加的代码
+
+/**
+ * 获取key路径，创建一份方法来获取key文件路径，jenkins和studio中可使用不同的路径
+ * @return
+ */
+def getMyStoreFile() {
+    if ("true".equals(project.IS_JENKINS)) {
+        System.out.println("jenkins")
+        return file(project.DemoAPP_KEYSTORE)
+    } else {
+        System.out.println("normal")
+        return file(project.DemoAPP_KEY_STORE)
+    }
+}
+
+android {
+//签名配置
+    signingConfigs {
+        release {
+            //别名
+            keyAlias project.DemoAPP_ALAIS
+            keyPassword project.DemoAPP_PSW
+            //路径
+            storeFile getMyStoreFile()
+            storePassword project.DemoAPP_STORE_PSW
+            v1SigningEnabled true       //对JAR签名
+            v2SigningEnabled true       //对APK签名
+        }
+
+        debug {
+            //别名
+            keyAlias project.DemoAPP_ALAIS
+            keyPassword project.DemoAPP_PSW
+            //路径
+            storeFile getMyStoreFile()
+            storePassword project.DemoAPP_STORE_PSW
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            //这里控制签名文件
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
